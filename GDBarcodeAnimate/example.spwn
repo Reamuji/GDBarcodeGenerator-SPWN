@@ -9,6 +9,7 @@ white = 2c
 
 // generate a data for barcode
 let barcode2 = @barcode::new("Dead", 5, 3) 
+// build the barcode inside the game
 barcode2.build(30, 225, white, black)
 
 barcode2.changeText ("men", 1/3, 0.1)
@@ -16,7 +17,24 @@ barcode2.changeText ("tell", 2/3, 0.1)
 barcode2.changeText ("no", 1, 0.1)
 barcode2.changeText ("tales", 4/3, 0.1)
 
+//you can create multiple barcode, but you cant resize it.
+//maybe ill update it to add that function
 
 // recomended to put the import up with other, this is just for example
 createStaticBarcode = import "StaticBarcode.spwn"
 createStaticBarcode("Dead", 30, 105, white, black, 3)
+
+
+
+/*syntax
+let barcodeName = @barcode::new(text, maxTextLength, barcodeSize)
+maxTextLength => barcode text length is limited, so you have to set the limit.
+barcodeSize is just the barcode height in the game (in block size)
+
+barcodeName.build(xPos, yPos, barColor, BGcolor)
+
+barcodeName.changeText (newText, time, moveDuration)
+time = which second it will change the text
+
+createStaticBarcode(text, x, y, barColor, BGcolor, size)
+*/
