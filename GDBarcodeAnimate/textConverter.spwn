@@ -1,0 +1,118 @@
+extract $
+extract obj_props
+
+//only support code 2 barcode 128
+
+startCodeWidth = "211214"
+stopCodeWidth = "2331112"
+
+lookupTable = readfile("barcode lookup table.txt")
+
+// Read and turn the lookupTable into an :
+//    A. Array of dict
+//  table[value].char/binary/width
+let table = []
+
+//    B. Dict to find value from char
+let value = {}
+
+lines = lookupTable.split("\n")
+for i in ..lines.length {
+	part = lines[i].split(" \t")
+	
+	// fill the array of dict
+	dict = {
+		char: part[3],
+		binary: part[7],
+		width: part[8],
+	}
+	table.push(dict)
+
+	// fill "find value from char" dict
+	let value[part[3]] = i
+}
+
+
+
+
+countChecksum = (valueList){
+	// start in 1 cus the startCode add 1
+	let total = 1
+	for i in ..valueList.length{
+		total += (i+1)*valueList[i]
+	}
+	checksum = total % 103
+	return checksum
+}
+
+// Function to convert text to Barcode bar width
+textToWidth = (string){
+	let output = ""
+	output += startCodeWidth
+	
+	// list of value, used for checksum
+	let valueList = []
+	for letter in string{
+		charValue = value.get(letter)
+		valueList.push(charValue)
+		charWidth = table[charValue].width
+		output += charWidth
+	}
+	cs = countChecksum(valueList)
+	output += table[cs].width
+	output += stopCodeWidth
+	return output
+}
+
+//value checking
+/*
+for i in ..table.length{
+	print("value: " + i as @string)
+	print("char: " + table[i].char as @string)
+	print("binary: " + table[i].binary as @string)
+	print("width: " + table[i].width as @string)
+	print("")
+}
+print("")
+print("")
+
+// bruh why tf dict arranged in random
+// binary search would be my guess
+for i in value{
+	print(i[0] + ": " + i[1] as @string)
+}
+*/
+
+// Function to convert text to Line Position
+getLinePos = (string){
+	width = textToWidth(string)
+	let output = []
+	let total = 0
+	for num in width {
+		total += num as @number
+		output.push(total)
+	}
+	return output
+}
+
+
+// add space so it reach certain length (i promise it useful)
+extendText = (text, newLength){
+    spaceAdded = newLength - text.length
+    if spaceAdded < 0{
+        print("error changing " + self.text + " to " + text)
+        throw("New text too long, please increase barcode max text")
+    }
+
+    let output = text
+    for i in ..spaceAdded{
+        output += " "
+    }
+    return output
+}
+
+return{
+    extendText: (text, newLength){return extendText(text, newLength)},
+    getLinePos: (string){return getLinePos(string)},
+    textToWidth: (string){return textToWidth(string)},
+}

@@ -1,0 +1,34 @@
+extract $
+extract obj_props
+textConverter = import "textConverter.spwn"
+
+createStaticBarcode = (text, xStart, yStart, barColor, bgColor, size = 1) {
+	let distance = 0
+	col = [bgColor, barColor]
+	width = textConverter.textToWidth(text)
+
+	add(obj{
+		OBJ_ID: 1767,    
+		X: xStart,
+		Y: yStart,
+		ROTATION: 90,
+		SCALING: 2 * size,
+		COLOR: barColor,
+		Z_ORDER: -1
+	})
+	
+	for i in ..width.length{
+		distance += width[i] as @number
+		add(obj{
+			OBJ_ID: 1767,    
+			X: xStart + distance * size,
+			Y: yStart,
+			ROTATION: 90,
+			SCALING: 2 * size,
+			COLOR: col[i%2],
+			Z_ORDER: i+1
+		})
+	}
+}
+
+return createStaticBarcode
