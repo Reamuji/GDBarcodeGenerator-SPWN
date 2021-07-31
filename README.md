@@ -3,6 +3,10 @@ Generate animated barcode inside Goemetry Dash
 
 based on this video:
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=cGSNaQ8EoS0
+" target="_blank"><img src="http://img.youtube.com/vi/cGSNaQ8EoS0/0.jpg" 
+alt="HEAVEN & HELL - DUSTCELL" width="240" height="180" border="10" /></a>
+
 [![HEAVEN & HELL - DUSTCELL](https://img.youtube.com/vi/cGSNaQ8EoS0/0.jpg)](https://www.youtube.com/watch?v=cGSNaQ8EoS0)
 
 There's an example file inside.
