@@ -1,0 +1,316 @@
+extract $
+extract obj_props
+
+//lol spagetti
+//at least it's readable enough
+
+//only support code 2 barcode 128
+
+startCode = "11010010000"
+stopCode = "1100011101011"
+
+startCodeWidth = "211214"
+stopCodeWidth = "2331112"
+
+
+lookupTable = readfile("barcode lookup table.txt")
+
+// Read and turn the lookupTable into an :
+//    A. Array of dict
+//  table[value].char/binary/width
+let table = []
+
+//    B. Dict to find value from char
+let value = {}
+
+lines = lookupTable.split("\n")
+for i in ..lines.length {
+	part = lines[i].split(" \t")
+	
+	// fill the array of dict
+	dict = {
+		char: part[3],
+		binary: part[7],
+		width: part[8],
+	}
+	table.push(dict)
+
+	// fill "find value from char" dict
+	let value[part[3]] = i
+}
+
+
+
+
+countChecksum = (valueList){
+	// start in 1 cus the startCode add 1
+	let total = 1
+	for i in ..valueList.length{
+		total += (i+1)*valueList[i]
+	}
+	checksum = total % 103
+	return checksum
+}
+
+
+// Function to convert text to Barcode binary
+textToBinary = (string){
+	let output = ""
+	output += startCode
+	
+	// list of value, used for checksum
+	let valueList = []
+	for letter in string{
+		charValue = value.get(letter)
+		valueList.push(charValue)
+		charBinary = table[charValue].binary
+		output += charBinary
+	}
+	cs = countChecksum(valueList)
+	output += table[cs].binary
+	output += stopCode
+	return output
+}
+
+// Function to convert text to Barcode bar width
+textToWidth = (string){
+	let output = ""
+	output += startCodeWidth
+	
+	// list of value, used for checksum
+	let valueList = []
+	for letter in string{
+		charValue = value.get(letter)
+		valueList.push(charValue)
+		charWidth = table[charValue].width
+		output += charWidth
+	}
+	cs = countChecksum(valueList)
+	output += table[cs].width
+	output += stopCodeWidth
+	return output
+}
+
+//value checking
+/*
+for i in ..table.length{
+	print("value: " + i as @string)
+	print("char: " + table[i].char as @string)
+	print("binary: " + table[i].binary as @string)
+	print("width: " + table[i].width as @string)
+	print("")
+}
+	print("")
+	print("")
+
+//lol why tf dict put in no order
+for i in value{
+	print(i[0] + ": " + i[1] as @string)
+}
+*/
+
+//sorry for not seperating the file lol
+
+//--------------------------↑Text conversion↑--------------------------
+//-------------------------↓Barcode generator↓-------------------------
+
+white = 1c
+black = 2c
+
+// this isn't optimized
+
+// i could just convert the binary to width
+// wait no, i have to seperate it into 11 digit
+// yep i should optimize the manually
+createBarcodeFromBinary = (binary,xStart,yStart,bar,bg) {
+	let col = [bg,bar]
+	for i in ..binary.length{
+		add(obj{
+			OBJ_ID: 1767,    
+			X: xStart+i,
+			Y: yStart,
+			ROTATION: 90,
+			SCALING: 2,
+			COLOR: col[binary[i] as @number],
+			Z_ORDER: i 
+		})
+	}
+
+	add(obj{
+		OBJ_ID: 1767,    
+		X: xStart+binary.length,
+		Y: yStart,
+		ROTATION: 90,
+		SCALING: 2,
+		COLOR: bg,
+		Z_ORDER: binary.length
+	})
+}
+
+createBarcodeFromWidth = (width,xStart,yStart,bar,bg) {
+	add(obj{
+		OBJ_ID: 1767,    
+		X: xStart,
+		Y: yStart,
+		ROTATION: 90,
+		SCALING: 2,
+		COLOR: bar,
+		Z_ORDER: -1
+	})
+
+	col = [bg,bar]
+	let distance = 0
+	for i in ..width.length{
+		distance += width[i] as @number
+		add(obj{
+			OBJ_ID: 1767,    
+			X: xStart + distance,
+			Y: yStart,
+			ROTATION: 90,
+			SCALING: 2,
+			COLOR: col[i%2],
+			Z_ORDER: i+1
+		})
+	}
+}
+
+createBarcodeFromText = (string,xStart,yStart,bar,bg) {
+	width = textToWidth(string)
+	add(obj{
+		OBJ_ID: 1767,    
+		X: xStart,
+		Y: yStart,
+		ROTATION: 90,
+		SCALING: 2,
+		COLOR: bar,
+		Z_ORDER: -1
+	})
+
+	col = [bg,bar]
+	let distance = 0
+	for i in ..width.length{
+		distance += width[i] as @number
+		add(obj{
+			OBJ_ID: 1767,    
+			X: xStart + distance,
+			Y: yStart,
+			ROTATION: 90,
+			SCALING: 2,
+			COLOR: col[i%2],
+			Z_ORDER: i+1
+		})
+	}
+}
+
+getLinePos = (string){
+	width = textToWidth(string)
+	let output = []
+	let total = 0
+	for num in width {
+		total += num as @number
+		output.push(total)
+	}
+	return output
+}
+
+
+//-------------------------↑Barcode generator↑-------------------------
+//--------------------------↓Animated barcode↓-------------------------
+
+// so what this does is made a barcode, but also return a "barcode" 
+// "Barcode" is a dict which contain an array of group, text and the bar width
+// this data could be used to modify the generated barcode 
+createAnimatedBarcode = (string,xStart,yStart,bar,bg,groupStart) {
+	//so it can accept group
+	groupStart = groupStart as @number
+	//wait it might be possible that we don't have to add groupStart
+
+	//this would be an array of group (will be return -ed)
+	let line = []
+
+	//this would be a string (will be return -ed)
+	let linePos = []
+
+	// also return this
+	width = textToWidth(string as @string)
+	add(obj{
+		OBJ_ID: 1767,    
+		X: xStart,
+		Y: yStart,
+		ROTATION: 90,
+		SCALING: 4,
+		COLOR: bar,
+		Z_ORDER: -1
+	})
+	
+	//i could save some group by not including immovable obj 
+	col = [bg,bar]
+	let distance = 0
+	for i in ..width.length{
+		distance += width[i] as @number
+		linePos.push(distance)
+		group = (groupStart + i) as @group
+		line.push(group)
+		add(obj{
+			OBJ_ID: 1767,    
+			X: xStart + distance,//distance * 3,
+			Y: yStart,
+			ROTATION: 90,
+			SCALING: 2,
+			COLOR: col[i%2],
+			Z_ORDER: i+1,
+			GROUPS: group
+		})
+	}
+	dict = {
+		//i might be
+		line : line,
+		width : width,
+		linePos : linePos,
+		text : string as @string
+	}
+	return dict
+}
+
+//the text have to be same length. but you can just add space
+changeText = (barcode, newText, xPlacement){
+	if newText.length != barcode.text.length{
+		print("error changing " + barcode.text + " to " + newText)
+		throw("can't change text value, text lenght is different")
+	}
+	newLinepos = getLinePos(newText)
+	for i in ..newLinepos.length{
+		moveX = newLinepos[i] as @number - barcode.linePos[i] as @number
+		if(moveX != 0){
+			add( trigger{
+			OBJ_ID: 901,
+			TARGET: barcode.line[i],
+			MOVE_X: moveX,
+			MOVE_Y: 0,
+			DURATION: 0.2,
+       			})
+		}
+	}
+}
+
+createBarcodeFromText("UPdown", 30,30, white, black)
+createBarcodeFromText("Dead ", 30, 80, white, black, 2)
+
+barcode1 = createAnimatedBarcode("Dead ", 30, 165, white, black, 2)
+
+barcode1 = changeText (barcode1, "men  ", 1/3, 0.1)
+barcode1 = changeText (barcode1, "tell ", 2/3, 0.1)
+barcode1 = changeText (barcode1, "no   ", 1, 0.1)
+barcode1 = changeText (barcode1, "tales", 4/3, 0.1)
+barcode1 = changeText (barcode1, "dead ", 5/3, 0.1)
+// Sorry you have to do this, spwn didn't support OOP lol
+// or is it ?
+/*yep it is
+type @barcode
+impl @barcode {
+    change_text: (self, text, …) { … }
+}
+
+barcode1 = @barcode::{ … }
+barcode1.change_text(…)
+*/

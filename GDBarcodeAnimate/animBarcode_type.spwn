@@ -1,0 +1,156 @@
+extract $
+extract obj_props
+textConverter = import "textConverter.spwn"
+
+type @barcode
+
+impl @barcode {
+//  create a barcode (only exist as data before being built)
+    new: (text, maxTextLength, size = 1){
+    //  An array to store group that each line has
+        let line = []
+    //  An array to store each line distance from xStart
+        let linePos = []
+        
+        text = textConverter.extendText(text, maxTextLength)
+    
+        let distance = 0
+        width = textConverter.textToWidth(text)
+        for i in ..width.length{
+            distance += width[i] as @number
+            linePos.push(distance)
+            group = ?g
+            line.push(group)
+        }
+    
+        return {
+            type: @barcode,
+            line : line,
+            linePos : linePos,
+            text : text,
+            size : size
+        }
+    },
+
+//  to create the barcode inside the level
+    build: (self, xStart, yStart, barColor, bgColor) {
+    	let distance = 0
+
+	    col = [bgColor,barColor]
+	    add(obj{
+    		OBJ_ID: 1767,    
+	    	X: xStart,
+		    Y: yStart,
+    		ROTATION: 90,
+	    	SCALING: 2 * self.size,
+		    COLOR: barColor,
+    		Z_ORDER: 1
+	    })
+    	for i in ..self.linePos.length{
+	    	add(obj{
+		    	OBJ_ID: 1767,    
+			    X: xStart + self.linePos[i] *  self.size,
+    			Y: yStart,
+	    		ROTATION: 90,
+		    	SCALING: 2 * self.size,
+			    COLOR: col[i%2],
+    			Z_ORDER: i+2,
+	    		GROUPS: self.line[i]
+		    })
+	    }
+    },
+
+//  Change text the barcode generate when scanned at specific time (assuming player in default speed). a compile time function
+//  the trigger generated just under the ground. should be easy to find if you want to move it somewhere else
+    changeText: (
+        self, newText, time, duration = 0,
+        easing: @easing_type = NONE, 
+        easing_rate: @number = 2
+        ){
+        newText = textConverter.extendText(newText, self.text.length)
+
+        newLinePos = textConverter.getLinePos(newText)
+        for i in ..newLinePos.length{
+            moveX = (newLinePos[i] as @number - self.linePos[i] as @number) * self.size
+            //print(moveX as @string + " = (" + (newLinePos[i]) as @string +" - "+ self.linePos[i]as @string+") * "+ self.size as @string)
+            if(moveX != 0){
+                add( obj{
+                    OBJ_ID: 901,
+                    X: time * 312,
+                    Y: -15,
+                    TARGET: self.line[i],
+                    MOVE_X: moveX,
+                    DURATION: duration,
+                    EASING: easing.id,
+                    EASING_RATE: easing_rate,
+                })
+            }
+        }
+
+        self = {
+            type: @barcode,
+            line : self.line,
+            linePos : newLinePos,
+            text : newText,
+            size : self.size
+        }
+    },
+/*
+//  Change the text that the barcode generate when scanned. a runtime function | fail
+    changeText_runtime: (
+        self, newText, duration = 0,
+        easing: @easing_type = NONE, 
+        easing_rate: @number = 2
+        ){
+        newText = textConverter.extendText(newText, self.text.length)
+
+        newLinePos = textConverter.getLinePos(newText)
+        for i in ..newLinePos.length{
+            moveX = (newLinePos[i] as @number - self.linePos[i] as @number) * self.size
+            //print(moveX as @string + " = (" + (newLinePos[i]) as @string +" - "+ self.linePos[i]as @string+") * "+ self.size as @string)
+            if(moveX != 0){
+                -> add( trigger{
+                    OBJ_ID: 901,
+                    Y: -15,
+                    TARGET: self.line[i],
+                    MOVE_X: moveX,
+                    DURATION: duration,
+                    EASING: easing.id,
+                    EASING_RATE: easing_rate,
+                   })
+            }
+        }
+        self = {
+            type: @barcode,
+            line : self.line,
+            linePos : newLinePos,
+            text : newText,
+            size : self.size
+        }
+    },
+*/
+}
+
+
+
+/* // not worth it
+return {
+//  alternate constructor
+    new : @barcode::new
+}
+*/
+
+/*
+// runtime barcode syntax | does the same thing but in runtime context | but failed
+let barcode1 = Barcode.new("Dead", 5, 3)
+barcode1.build(30, 165, white, black)
+
+wait(1/3)
+barcode1.changeText ("men", 0.1)
+wait(1/3)
+barcode1.changeText ("tell", 0.1)
+wait(1/3)
+barcode1.changeText ("no", 0.1)
+wait(1/3)
+barcode1.changeText ("tales", 0.1)
+*/
