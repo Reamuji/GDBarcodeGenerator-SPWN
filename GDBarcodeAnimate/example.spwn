@@ -26,7 +26,7 @@ createStaticBarcode("Dead", 30, 105, white, black, 3)
 
 
 
-///*syntax
+/*syntax
 let barcodeName = @barcode::new(text, maxTextLength, barcodeSize)
     maxTextLength => barcode text length is limited, so you have to set the limit.
     barcodeSize is just the barcode height in the game (in block size)
