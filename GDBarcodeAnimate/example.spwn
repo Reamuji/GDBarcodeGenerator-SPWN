@@ -1,6 +1,7 @@
 extract $
 extract obj_props
 import "animBarcode_type.spwn"
+createStaticBarcode = import "StaticBarcode.spwn"
 
 BG.set(0,0,0)
 black = 1c
@@ -17,6 +18,10 @@ barcode2.changeText ("tell", 2/3, 0.1)
 barcode2.changeText ("no", 1, 0.1)
 barcode2.changeText ("tales", 4/3, 0.1)
 
+
+createStaticBarcode("Amogus", 30, 195, white, black ,3)
+
+
 //you can create multiple barcode, but you cant resize it.
 //maybe ill update it to add that function
 
@@ -27,14 +32,16 @@ createStaticBarcode("Dead", 30, 105, white, black, 3)
 
 
 /*syntax
+
 let barcodeName = @barcode::new(text, maxTextLength, barcodeSize)
-    maxTextLength => barcode text length is limited, so you have to set the limit.
+    maxTextLength => barcode text length is constant, so you have to set the limit.
     barcodeSize is just the barcode height in the game (in block size)
 
 barcodeName.build(xPos, yPos, barColor, backgroundColor)
 
 barcodeName.changeText (newText, time, moveDuration)
-    time = which second it will change the text
+    time = which second it will change the text | 
+    
 
 createStaticBarcode(text, x, y, barColor, BGcolor, size)
 */
