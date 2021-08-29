@@ -1,7 +1,7 @@
 extract $
 extract obj_props
+//animated barcode
 import "animBarcode_type.spwn"
-createStaticBarcode = import "StaticBarcode.spwn"
 
 BG.set(0,0,0)
 black = 1c
@@ -19,12 +19,13 @@ barcode2.changeText ("no", 1, 0.1)
 barcode2.changeText ("tales", 4/3, 0.1)
 
 
-createStaticBarcode("Amogus", 30, 195, white, black ,3)
 
 
-//you can create multiple barcode, but you cant resize it.
+//you can generate multiple barcode , but you cant resize it.
 //maybe ill update it to add that function
 
+
+//Static barcode
 // recomended to put the import up with other, this is just for example
 createStaticBarcode = import "StaticBarcode.spwn"
 createStaticBarcode("Dead", 30, 105, white, black, 3)
@@ -35,13 +36,16 @@ createStaticBarcode("Dead", 30, 105, white, black, 3)
 
 let barcodeName = @barcode::new(text, maxTextLength, barcodeSize)
     maxTextLength => barcode text length is constant, so you have to set the limit.
-    barcodeSize is just the barcode height in the game (in block size)
+    barcodeSize => the barcode height in the game (in block size)
 
 barcodeName.build(xPos, yPos, barColor, backgroundColor)
 
 barcodeName.changeText (newText, time, moveDuration)
-    time = which second it will change the text | 
+    time = on which second it will change the text
+    you have to put the 
     
 
 createStaticBarcode(text, x, y, barColor, BGcolor, size)
+    the function name depend on the variable name where you take the module return value
+    functionName = import "StaticBarcode.spwn"
 */
